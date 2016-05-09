@@ -1,0 +1,11 @@
+{
+  "name": "dhmq",
+  "description": "Message queueing server",
+  "version": "0.0.1",
+  "author": "Dominik Herbst",
+  "dependencies": {
+    "dhlog": "git://github.com/d1april/dhlog.git",
+    "socket.io": "1.4.x",
+    "socket.io-client": "^1.4.5"
+  }
+}
