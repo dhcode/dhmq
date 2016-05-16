@@ -44,6 +44,18 @@ describe('Test server', () => {
 			done();
 		});
 	});
+
+	function testTaskHandler(task, onFinish) {
+
+	}
+
+	it('should register worker', (done) => {
+		client.on('registeredWorker', (workerId) => {
+			assert.ok(workerId);
+			done();
+		});
+		client.registerAsWorker('^doTest$', testTaskHandler);
+	});
 	
 
 	after(() => {
