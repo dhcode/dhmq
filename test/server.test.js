@@ -57,6 +57,12 @@ describe('Test server', () => {
 		client.registerAsWorker('^doTest$', testTaskHandler);
 	});
 	
+	it('should add task', (done) => {
+		client.addTask('doTest', {name: 'Tester'}, (response) => {
+
+		});
+	});
+	
 
 	after(() => {
 		server.stop();
