@@ -17,8 +17,8 @@ describe('Test server', () => {
 		});
 	});
 
-	it('should start', (done) => {
-		server.start(done);
+	it('should start', () => {
+		return server.start();
 	});
 
 	it('should spawn a client', (done) => {
@@ -56,13 +56,13 @@ describe('Test server', () => {
 		});
 		client.registerAsWorker('^doTest$', testTaskHandler);
 	});
-	
+
 	it('should add task', (done) => {
 		client.addTask('doTest', {name: 'Tester'}, (response) => {
-
+            done();
 		});
 	});
-	
+
 
 	after(() => {
 		server.stop();
