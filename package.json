@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "dhlog": "git://github.com/d1april/dhlog.git",
+    "ldjson-stream": "^1.2.1",
     "socket.io": "^1.6.0",
     "socket.io-client": "^1.6.0"
   },
@@ -17,7 +18,7 @@
     "mocha": "*"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">6.0.0"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha"

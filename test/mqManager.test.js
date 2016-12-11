@@ -11,11 +11,7 @@ describe('Basic Task work', () => {
     const queue = manager.getQueue('test');
     queue.finishedCleanupTime = 0;
 
-    let lastTaskToWork = null;
-
-    const worker = manager.createWorker((taskToWork) => {
-        lastTaskToWork = taskToWork;
-    }, null);
+    const worker = TestHelper.createTestWorker(manager);
 
     it('register worker', () => {
         manager.registerWorker(worker);
@@ -23,17 +19,19 @@ describe('Basic Task work', () => {
     });
 
     it('add task', () => {
+        worker.expectingTask(task);
         const taskInfo = manager.addTask(task);
         assert.equal(taskInfo.state, 'added');
     });
 
     it('worker got work request', () => {
-        assert.equal(lastTaskToWork, task);
-        assert.equal(worker.currentTask, task);
-        assert.equal(worker.state, 'busy');
-        const taskInfo = manager.getTaskInfo(task.id);
-        assert.equal(taskInfo.state, 'working');
-
+        return worker.hasReceivedExpectedTask().then((receivedTask) => {
+            assert.equal(receivedTask, task);
+            assert.equal(worker.currentTask, task);
+            assert.equal(worker.state, 'busy');
+            const taskInfo = manager.getTaskInfo(task.id);
+            assert.equal(taskInfo.state, 'working');
+        });
     });
 
     it('update task', () => {
@@ -71,11 +69,7 @@ describe('Abort Task work', () => {
     const manager = MQManager.getInstance('test2');
     const task = manager.createTask('test', 'task1');
 
-    let lastTaskToWork = null;
-
-    const worker = manager.createWorker((taskToWork) => {
-        lastTaskToWork = taskToWork;
-    }, null);
+    const worker = TestHelper.createTestWorker(manager);
 
     it('register worker', () => {
         manager.registerWorker(worker);
@@ -83,23 +77,35 @@ describe('Abort Task work', () => {
     });
 
     it('add task', () => {
+        worker.expectingTask(task);
         const taskInfo = manager.addTask(task);
         assert.equal(taskInfo.state, 'added');
     });
 
     it('got work request', () => {
-        assert.equal(lastTaskToWork, task);
-        assert.equal(worker.currentTask, task);
-        assert.equal(worker.state, 'busy');
-        const taskInfo = manager.getTaskInfo(task.id);
-        assert.equal(taskInfo.state, 'working');
+        return worker.hasReceivedExpectedTask().then((receivedTask) => {
+            assert.equal(receivedTask, task);
+            assert.equal(worker.currentTask, task);
+            assert.equal(worker.state, 'busy');
+            const taskInfo = manager.getTaskInfo(task.id);
+            assert.equal(taskInfo.state, 'working');
+        });
     });
 
     it('abort task', () => {
+        worker.expectingAbort();
         const taskInfo = manager.abortTask(task.id);
         assert.equal(taskInfo.state, 'finished');
         assert.equal(worker.currentTask, null);
         assert.equal(worker.state, 'waiting');
+
+    });
+
+    it('got abort request', () => {
+        worker.hasReceivedExpectedAbort().then(() => {
+            assert.equal(worker.currentTask, null);
+            assert.equal(worker.state, 'waiting');
+        });
     });
 
 
