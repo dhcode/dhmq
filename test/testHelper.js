@@ -1,6 +1,8 @@
 /* Created by Dominik Herbst on 2016-12-04 */
 
 const MQWorker = require('../lib/mqWorker');
+const Writable = require('stream').Writable;
+const Readable = require('stream').Readable;
 
 class TestHelper {
 
@@ -118,6 +120,35 @@ class TestHelper {
         const worker = TestHelper.createTestWorker(manager);
 
         return {manager: manager, worker: worker};
+    }
+
+    static getWriteStreamBuffer() {
+        const writable =  new Writable({
+            write(chunk, encoding, callback) {
+                writable.calls++;
+                writable.cachedLines.push(chunk);
+                callback();
+            },
+        });
+        writable.calls = 0;
+        writable.cachedLines = [];
+        return writable;
+    }
+
+    static getReadStreamBuffer(lines) {
+        const data = lines.join('');
+        const readable =  new Readable({
+            read(size) {
+                if(readable.index >= data.length) {
+                    return this.push(null);
+                }
+                const part = data.substring(readable.index, readable.index + size);
+                readable.index += part.length;
+                this.push(part);
+            },
+        });
+        readable.index = 0;
+        return readable;
     }
 
 }

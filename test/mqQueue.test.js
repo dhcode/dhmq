@@ -16,6 +16,8 @@ describe('MQQueue', () => {
 
     queue.start();
 
+    let cachedLines = null;
+
     it('add tasks', () => {
         worker.expectingTask({id: 't0'});
         for (let i = 0; i < 10; i++) {
@@ -49,21 +51,28 @@ describe('MQQueue', () => {
     });
 
     it('serialize queue', () => {
-        let calls = 0;
-        const myWritable = new Writable({
-            write(chunk, encoding, callback) {
-                calls++;
-                console.log('queue: '+chunk);
-                callback();
-            },
-        });
+        const myWritable = TestHelper.getWriteStreamBuffer();
         const objectStream = ldj.serialize();
         objectStream.pipe(myWritable);
 
         return queue.serializeQueue(objectStream).then(() => {
             return queue.serializeWaiting(objectStream);
         }).then(() => {
-            assert.equal(calls, 10);
+            cachedLines = myWritable.cachedLines;
+            assert.equal(myWritable.calls, 10);
+        });
+
+    });
+
+    it('deserialize queue', (done) => {
+        const myReadable = TestHelper.getReadStreamBuffer(cachedLines);
+        const objectStream = ldj.parse();
+        myReadable.pipe(objectStream);
+        objectStream.on('data', (obj) => {
+            console.log('entry: ', obj);
+        });
+        objectStream.on('end', () => {
+            done();
         });
 
     });
