@@ -1,5 +1,8 @@
 /* Created by Dominik Herbst on 2016-12-04 */
 
+const fs = require('fs');
+const os = require('os');
+const exec = require('child_process').exec;
 const MQWorker = require('../lib/mqWorker');
 const Writable = require('stream').Writable;
 const Readable = require('stream').Readable;
@@ -92,7 +95,7 @@ class TestHelper {
     }
 
     static oneEventForTask(manager, event, taskId) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const listener = function (taskInfo) {
                 if (taskInfo.task.id == taskId) {
                     manager.removeListener(event, listener);
@@ -106,7 +109,7 @@ class TestHelper {
     static getMockManagerAndWorker() {
         const manager = {
             findWorkerForTask: function (task) {
-                if(worker.isFree()) return worker;
+                if (worker.isFree()) return worker;
                 return null;
             },
             startTask: function (worker, taskInfo) {
@@ -123,7 +126,7 @@ class TestHelper {
     }
 
     static getWriteStreamBuffer() {
-        const writable =  new Writable({
+        const writable = new Writable({
             write(chunk, encoding, callback) {
                 writable.calls++;
                 writable.cachedLines.push(chunk);
@@ -137,9 +140,9 @@ class TestHelper {
 
     static getReadStreamBuffer(lines) {
         const data = lines.join('');
-        const readable =  new Readable({
+        const readable = new Readable({
             read(size) {
-                if(readable.index >= data.length) {
+                if (readable.index >= data.length) {
                     return this.push(null);
                 }
                 const part = data.substring(readable.index, readable.index + size);
@@ -149,6 +152,39 @@ class TestHelper {
         });
         readable.index = 0;
         return readable;
+    }
+
+    static createTempFolder() {
+        return new Promise((resolve, reject) => {
+            fs.mkdtemp('test-', (err, dirPath) => {
+                err ? reject(err) : resolve(dirPath);
+            });
+        });
+    }
+
+    static removeFolder(path) {
+        return new Promise((resolve, reject) => {
+            let p;
+            if(os.platform() == 'win32') {
+                p = exec('rmdir /s /q "'+path+'"');
+            } else {
+                p = exec('rm -rf "'+path+'"');
+            }
+            p.on('close', (code) => {
+                code == 0 ? resolve() : reject();
+            });
+            p.on('error', (err) => {
+                reject(err);
+            });
+        });
+    }
+
+    static statPath(path) {
+        return new Promise((resolve, reject) => {
+            fs.stat(path, (err, stats) => {
+                err ? reject(err) : resolve(stats);
+            });
+        });
     }
 
 }

@@ -5,17 +5,18 @@ const MQTask = require('../lib/mqTask');
 const assert = require('assert');
 const TestHelper = require('./testHelper');
 const ldj = require('ldjson-stream');
-const Writable = require('stream').Writable;
 
 describe('MQQueue', () => {
 
     const {manager, worker} = TestHelper.getMockManagerAndWorker();
 
     const queue = new MQQueue('test');
+    queue.limit = 10;
     queue.setManager(manager);
 
     queue.start();
 
+    let restoredQueue = null;
     let cachedLines = null;
 
     it('add tasks', () => {
@@ -37,7 +38,9 @@ describe('MQQueue', () => {
         const promise = queue.pause();
 
         setTimeout(() => {
-            queue.finishTask(worker.currentTask.id, 'done');
+            queue.finishTask(worker.currentTask.id, 'done', 'success');
+            worker.onFinishedTask();
+
         }, 10);
 
         return promise.then(() => {
@@ -50,31 +53,67 @@ describe('MQQueue', () => {
 
     });
 
+    it('can\'t add task to paused queue', () => {
+        const task = new MQTask('test', 'taskNeverAdds');
+        const taskInfo = queue.addTask(task);
+        assert.equal(taskInfo.state, 'inactive');
+    });
+
     it('serialize queue', () => {
         const myWritable = TestHelper.getWriteStreamBuffer();
         const objectStream = ldj.serialize();
         objectStream.pipe(myWritable);
 
         return queue.serializeQueue(objectStream).then(() => {
-            return queue.serializeWaiting(objectStream);
-        }).then(() => {
             cachedLines = myWritable.cachedLines;
+            const q = JSON.parse(cachedLines[0]);
+            assert.equal(q.id, queue.id);
+            assert.equal(q.state, 'paused');
+            assert.deepEqual(q.stats, queue.stats);
             assert.equal(myWritable.calls, 10);
         });
 
     });
 
-    it('deserialize queue', (done) => {
+    it('deserialize queue', () => {
         const myReadable = TestHelper.getReadStreamBuffer(cachedLines);
         const objectStream = ldj.parse();
         myReadable.pipe(objectStream);
-        objectStream.on('data', (obj) => {
-            console.log('entry: ', obj);
-        });
-        objectStream.on('end', () => {
-            done();
-        });
 
+        return MQQueue.fromSerialized(objectStream).then(q => {
+            assert.equal(q.id, queue.id);
+            assert.equal(q.state, 'paused');
+            assert.equal(q.manager, null);
+            assert.deepEqual(q.stats, queue.stats);
+            restoredQueue = q;
+            restoredQueue.setManager(manager);
+        });
+    });
+
+    it('resume queue', () => {
+        worker.expectingTask({id: 't1'});
+        restoredQueue.start();
+        assert(restoredQueue.state, 'running');
+    });
+
+    it('worker got second task', () => {
+        return worker.hasReceivedExpectedTask().then((receivedTask) => {
+            assert.equal(worker.state, 'busy');
+        });
+    });
+
+    it('add tasks to hit queue limit', () => {
+        let taskInfo;
+        taskInfo = restoredQueue.addTask(new MQTask('test', 'tx'));
+        assert.equal(taskInfo.state, 'added');
+        assert.equal(taskInfo.pos, 8);
+
+        taskInfo = restoredQueue.addTask(new MQTask('test', 'ty'));
+        assert.equal(taskInfo.state, 'added');
+        assert.equal(taskInfo.pos, 9);
+
+        taskInfo = restoredQueue.addTask(new MQTask('test', 'tz'));
+        assert.equal(taskInfo.state, 'full');
     });
 
 
