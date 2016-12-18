@@ -5,9 +5,9 @@ const assert = require('assert');
 describe('Test server', () => {
 	const DHMQServer = require('../lib/server');
 	const DHMQClient = require('../lib/client');
-	var server = null;
-	var client = null;
-	var port = 31443;
+	let server = null;
+    let client = null;
+    const port = 31443;
 
 	it('instantiate', () => {
 		server = new DHMQServer({
@@ -37,35 +37,31 @@ describe('Test server', () => {
 
 	});
 
-	it('should authenticate client', (done) => {
-		client.authenticate((response) => {
+	it('should authenticate client', () => {
+		return client.authenticate().then((response) => {
 			assert.ok(response);
 			assert.equal(response.success, true);
-			done();
 		});
 	});
 
-	function testTaskHandler(task, onFinish) {
-
+	function testTaskHandler(task) {
+	    return Promise.resolve('ok');
 	}
 
-	it('should register worker', (done) => {
-		client.on('registeredWorker', (workerId) => {
-			assert.ok(workerId);
-			done();
-		});
-		client.registerAsWorker('^doTest$', testTaskHandler);
-	});
-
-	it('should add task', (done) => {
-		client.addTask('doTest', {name: 'Tester'}, (response) => {
-            done();
+	it('should register worker', () => {
+		return client.registerAsWorker('^doTest$', testTaskHandler).then((response) => {
+		    assert.ok(response.workerId);
 		});
 	});
 
+	it('should add task', () => {
+		return client.addTask('doTest', {name: 'Tester'});
+	});
 
-	after(() => {
-		server.stop();
+
+	it('should stop', () => {
+	    client.disconnect();
+		return server.stop();
 	});
 
 });

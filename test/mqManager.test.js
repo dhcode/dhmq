@@ -178,7 +178,7 @@ describe('Return Task work', () => {
     });
 
     it('return task', () => {
-        const taskInfo = manager.returnTask(task.id);
+        const taskInfo = manager.returnTask(task.id, 'shutdown');
         assert.equal(taskInfo.state, 'waiting');
         assert.equal(taskInfo.pos, 0);
         assert.equal(worker.currentTask, null);
