@@ -1,7 +1,9 @@
 /* Created by Dominik Herbst on 2016-12-04 */
 
 const fs = require('fs');
+const path = require('path');
 const os = require('os');
+const func = require('../lib/func');
 const exec = require('child_process').exec;
 const MQWorker = require('../lib/mqWorker');
 const Writable = require('stream').Writable;
@@ -165,10 +167,10 @@ class TestHelper {
     static removeFolder(path) {
         return new Promise((resolve, reject) => {
             let p;
-            if(os.platform() == 'win32') {
-                p = exec('rmdir /s /q "'+path+'"');
+            if (os.platform() == 'win32') {
+                p = exec('rmdir /s /q "' + path + '"');
             } else {
-                p = exec('rm -rf "'+path+'"');
+                p = exec('rm -rf "' + path + '"');
             }
             p.on('close', (code) => {
                 code == 0 ? resolve() : reject();
@@ -179,10 +181,21 @@ class TestHelper {
         });
     }
 
-    static statPath(path) {
+    static statPath(fsPath) {
         return new Promise((resolve, reject) => {
-            fs.stat(path, (err, stats) => {
+            fs.stat(fsPath, (err, stats) => {
                 err ? reject(err) : resolve(stats);
+            });
+        });
+    }
+
+    static writeFile(filePath, content) {
+        const dir = path.dirname(filePath);
+        return func.ensureFolder(dir).then(() => {
+            return new Promise((resolve, reject) => {
+                fs.writeFile(filePath, content, (err) => {
+                    err ? reject(err) : resolve();
+                });
             });
         });
     }
