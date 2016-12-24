@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "dhlog": "git://github.com/d1april/dhlog.git",
+    "jsonschema": "^1.1.1",
     "ldjson-stream": "^1.2.1",
     "mkdirp": "^0.5.1",
     "socket.io": "^1.6.0",

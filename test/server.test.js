@@ -90,6 +90,12 @@ describe('Test server', () => {
         return client.addTask('doTest', {name: 'Tester'});
     });
 
+    it('should add task and fail', () => {
+        return client.addTask('do(T)est', {name: 'Tester'}).catch((err) => {
+            console.log('failed', err);
+            assert.equal(err.error, 'invalidInput');
+        });
+    });
 
     it('should stop', () => {
         return server.stop();
