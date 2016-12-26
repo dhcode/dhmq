@@ -49,20 +49,14 @@ describe('Test server', () => {
         return server.start();
     });
 
-    it('should spawn a client', (done) => {
+    it('should spawn a client', () => {
         client = new DHMQClient({
             transports: ['websocket'],
             url: 'http://localhost:' + serverConfig.port + '/',
             userId: credentials.userId,
             key: credentials.key
         });
-        client.on('connect', () => {
-            done();
-        });
-        client.on('connect_error', (err) => {
-            done(err);
-        });
-
+        return client.connect();
     });
 
     it('should authenticate client', () => {
