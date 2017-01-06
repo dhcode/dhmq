@@ -28,6 +28,8 @@ describe('Test server', () => {
         key: 'buxdADiwyPB2o0AuuwlD'
     };
 
+    let taskId;
+
     before(() => {
         return TestHelper.createTempFolder().then(folderPath => {
             testDirPath = folderPath;
@@ -81,7 +83,19 @@ describe('Test server', () => {
     });
 
     it('should add task', () => {
-        return client.addTask('doTest', {name: 'Tester'});
+        return client.addTask('doTest', {name: 'Tester'}).then((taskInfo) => {
+            assert.ok(taskInfo.task.id);
+            taskId = taskInfo.task.id;
+        });
+    });
+
+    it('should watch task', (done) => {
+        client.watchTask(taskId, (taskInfo) => {
+            assert.equal(taskInfo.task.id, taskId);
+            if(taskInfo.state == 'finished') {
+                done();
+            }
+        });
     });
 
     it('should add task and fail', () => {
