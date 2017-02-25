@@ -8,7 +8,7 @@ describe('Test server', () => {
     const DHMQServer = require('../lib/dhmqServer');
     const DHMQClient = require('../lib/dhmqClient');
     let server = null;
-    let client = null;
+    let client = null, client2 = null;
     let testDirPath = null;
 
     const serverConfig = {
@@ -103,6 +103,47 @@ describe('Test server', () => {
             console.log('failed', err);
             assert.equal(err.error, 'invalidInput');
         });
+    });
+
+    it('should spawn a second client', () => {
+        client2 = new DHMQClient({
+            transports: ['websocket'],
+            url: 'http://localhost:' + serverConfig.port + '/',
+            userId: credentials.userId,
+            key: credentials.key
+        });
+        return client2.connect();
+    });
+
+    it('should authenticate second client', () => {
+        return client2.authenticate().then((response) => {
+            assert.ok(response);
+            assert.equal(response.success, true);
+        });
+    });
+
+    it('should broadcast a message from client 1 to 2', (done) => {
+        client2.onceMessage('testMessage', (msg) => {
+            assert.equal(msg.value, 'test');
+            done();
+        });
+
+        client.sendMessage(null, 'testMessage', {value: 'test'});
+    });
+
+    it('should join a room', () => {
+        return client2.joinRoom('testRoom').then((response) => {
+            assert.equal(response.success, true);
+        });
+    });
+
+    it('should send a message to room', (done) => {
+        client2.onceMessage('testRoomMessage', (msg) => {
+            assert.equal(msg.value, 'test');
+            done();
+        });
+
+        client.sendMessage('testRoom', 'testRoomMessage', {value: 'test'});
     });
 
     it('should stop', () => {
