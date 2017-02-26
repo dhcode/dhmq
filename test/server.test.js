@@ -11,22 +11,26 @@ describe('Test server', () => {
     let client = null, client2 = null;
     let testDirPath = null;
 
+    const credentials = {
+        userId: 'user1',
+        key: 'buxdADiwyPB2o0AuuwlD'
+    };
+
     const serverConfig = {
         secure: false,
         host: '',
         port: 30000 + Math.floor(Math.random() * 10000),
         authProvider: {
-            provider: 'dir',
-            dirPath: null
+            provider: 'dir', // dir or env
+            dirPath: null,
+            defaultId: credentials.userId,
+            defaultSecret: credentials.key
         },
         managerInstance: null,
         managerProperties: {}
     };
 
-    const credentials = {
-        userId: 'user1',
-        key: 'buxdADiwyPB2o0AuuwlD'
-    };
+
 
     let taskId;
 
