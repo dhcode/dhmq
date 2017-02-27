@@ -9,7 +9,15 @@ The DHMQServer can be used as interface to the MQManager.
 
 An application could be designed to have the MQManager within its node process or remote as separate server.
 
-## Usage
+## Install it globally
+
+    npm install -g dhmq
+    
+Run the server with the global command line:
+
+    dhmq
+
+## Usage in working directory of this project
 
 Install the dependencies:
 

@@ -1,3 +1,4 @@
+#! /usr/bin/env node
 /* Created by Dominik Herbst on 2016-12-18 */
 
 const config = require('./lib/config');
