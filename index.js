@@ -6,4 +6,4 @@ exports.MQManager = require('./lib/mqManager');
 exports.MQQeue = require('./lib/mqQueue');
 exports.MQTask = require('./lib/mqTask');
 exports.MQWorker = require('./lib/mqWorker');
-
+exports.runServer = require('./server').runServer;
