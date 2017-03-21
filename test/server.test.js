@@ -33,6 +33,7 @@ describe('Test server', () => {
 
 
     let taskId;
+    let workerRegistration = null;
 
     before(() => {
         return TestHelper.createTempFolder().then(folderPath => {
@@ -83,6 +84,8 @@ describe('Test server', () => {
     it('should register worker', () => {
         return client.registerAsWorker('^doTest$', testTaskHandler, abortTaskHandler).then((response) => {
             assert.ok(response.workerId);
+            assert.ok(response.unregister);
+            workerRegistration = response;
         });
     });
 
